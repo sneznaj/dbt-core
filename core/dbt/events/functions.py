@@ -1,11 +1,13 @@
 
 from colorama import Style
+from datetime import datetime
 import dbt.events.functions as this  # don't worry I hate it too.
 from dbt.events.base_types import Cli, Event, File, ShowException
 from dbt.events.types import T_Event
 import dbt.flags as flags
 # TODO this will need to move eventually
 from dbt.logger import SECRET_ENV_PREFIX, make_log_dir_if_missing, GLOBAL_LOGGER
+import json
 import io
 from io import StringIO, TextIOWrapper
 import logbook
@@ -111,19 +113,34 @@ def scrub_secrets(msg: str, secrets: List[str]) -> str:
     return scrubbed
 
 
+# types that represent json serializable values
+JSONValue = Union[str, int, float, bool, None]
+JSONType = Union[JSONValue, Dict[str, JSONValue], List[JSONValue]]
+
+
 # returns a dictionary representation of the event fields. You must specify which of the
 # available messages you would like to use (i.e. - e.message, e.cli_msg(), e.file_msg())
 # used for constructing json formatted events. includes secrets which must be scrubbed at
 # the usage site.
-def event_to_dict(e: T_Event, msg_fn: Callable[[T_Event], str]) -> dict:
-    level = e.level_tag()
+def event_to_serializable_dict(
+    e: T_Event, ts_fn: Callable[[datetime], str],
+    msg_fn: Callable[[T_Event], str]
+) -> Dict[str, JSONType]:
+    data: Optional[dict] = None
+    if hasattr(e, '__dataclass_fields__'):
+        data = {
+            x: e.fields_to_json(getattr(e, x)) for x, y
+            in e.__dataclass_fields__.items()  # type: ignore[attr-defined]
+            if type(y._field_type) == _FIELD_BASE
+        }
+
     return {
         'log_version': e.log_version,
-        'ts': e.get_ts(),
+        'ts': ts_fn(e.get_ts()),
         'pid': e.get_pid(),
         'msg': msg_fn(e),
-        'level': level,
-        'data': Optional[Dict[str, Any]],
+        'level': e.level_tag(),
+        'data': data,
         'invocation_id': e.get_invocation_id()
     }
 
@@ -141,20 +158,10 @@ def create_text_log_line(e: T_Event, msg_fn: Callable[[T_Event], str]) -> str:
 
 
 # translates an Event to a completely formatted json log line
-# you have to specify which message you want. (i.e. - e.message, e.cli_msg(), e.file_msg())
+# you have to specify which message you want. (i.e. - e.message(), e.cli_msg(), e.file_msg())
 def create_json_log_line(e: T_Event, msg_fn: Callable[[T_Event], str]) -> str:
-    values = event_to_dict(e, lambda x: msg_fn(x))
-    values['ts'] = e.get_ts().isoformat()
-    if hasattr(e, '__dataclass_fields__'):
-        values['data'] = {
-            x: getattr(e, x) for x, y
-            in e.__dataclass_fields__.items()  # type: ignore[attr-defined]
-            if type(y._field_type) == _FIELD_BASE
-        }
-    else:
-        values['data'] = None
-
-    raw_log_line = values.to_json()
+    values = event_to_serializable_dict(e, lambda dt: dt.isoformat(), lambda x: msg_fn(x))
+    raw_log_line = json.dumps(values, sort_keys=True)
     return scrub_secrets(raw_log_line, env_secrets())
 
 

@@ -3,17 +3,13 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # These base types define the _required structure_ for the concrete event #
 # types defined in types.py                                               #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-
-JSONValue = Union[str, int, float, bool, None]
-JSONType = Union[JSONValue, Dict[str, JSONValue], List[JSONValue]]
 
 
 # in preparation for #3977
@@ -81,15 +77,20 @@ class Event(metaclass=ABCMeta):
     def message(self) -> str:
         raise Exception("msg not implemented for Event")
 
-    # Default implementation for turning an event into json.
-    # Should be overridden by concrete event types whose attributes are not serializable to json.
-    def to_json(self) -> str:
+    # override this method to convert non-json serializable fields to json.
+    # for override examples, see existing concrete types.
+    #
+    # there is no type-level mechanism to have mypy enforce json serializability, so we just try
+    # to serialize and raise an exception at runtime when that fails. This safety mechanism
+    # only works if we have attempted to serialized every concrete event type in our tests.
+    def fields_to_json(self, field_value: Any) -> Any:
         try:
-            json.dumps(self, sort_keys=True)
+            json.dumps(field_value, sort_keys=True)
+            return field_value
         except TypeError:
             raise Exception(
                 f"{type(self).__name__} is not serializable to json."
-                " Please override Event::to_json."
+                " Please override Event::fields_to_json in the concrete event class in types.py."
             )
 
     # exactly one time stamp per concrete event
