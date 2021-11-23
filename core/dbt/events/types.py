@@ -572,6 +572,13 @@ class SQLQueryStatus(DebugLevel, Cli, File):
     def message(self) -> str:
         return f"SQL status: {self.status} in {self.elapsed} seconds"
 
+    # overriding default json serialization for this event
+    def fields_to_json(self, val: Any) -> Any:
+        if isinstance(val, AdapterResponse):
+            return str(val)  # the AdapterResponse class overrides __str__ so this is a good choice
+
+        return val
+
 
 @dataclass
 class SQLCommit(DebugLevel, Cli, File):
