@@ -6,6 +6,7 @@ from dbt.events.base_types import (
     Cli, Event, File, DebugLevel, InfoLevel, WarnLevel, ErrorLevel, ShowException
 )
 from dbt.events.format import format_fancy_output_line, pluralize
+from dbt.events.functions import JSONType
 from dbt.node_types import NodeType
 from typing import Any, Callable, cast, Dict, List, Optional, Set, Tuple, TypeVar, Union
 
@@ -134,6 +135,13 @@ class MainReportArgs(DebugLevel, Cli, File):
 
     def message(self):
         return f"running dbt with arguments {str(self.args)}"
+
+    # overriding default json serialization for this event
+    def fields_to_json(self, val: Any) -> JSONType:
+        if isinstance(val, argparse.Namespace):
+            return str(val)
+
+        return val
 
 
 @dataclass

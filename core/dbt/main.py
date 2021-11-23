@@ -225,7 +225,7 @@ def run_from_args(parsed):
     # set log_format in the logger
     parsed.cls.pre_init_hook(parsed)
 
-    fire_event(MainReportVersion(v=dbt.version.installed))
+    fire_event(MainReportVersion(v=str(dbt.version.installed)))
 
     # this will convert DbtConfigErrors into RuntimeExceptions
     # task could be any one of the task objects

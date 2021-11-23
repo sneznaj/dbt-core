@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from dataclasses import dataclass
 from datetime import datetime
+from dbt.events.functions import JSONType
 import json
 import os
 from typing import Any, Optional
@@ -83,14 +84,18 @@ class Event(metaclass=ABCMeta):
     # there is no type-level mechanism to have mypy enforce json serializability, so we just try
     # to serialize and raise an exception at runtime when that fails. This safety mechanism
     # only works if we have attempted to serialized every concrete event type in our tests.
-    def fields_to_json(self, field_value: Any) -> Any:
+    def fields_to_json(self, field_value: Any) -> JSONType:
         try:
             json.dumps(field_value, sort_keys=True)
             return field_value
         except TypeError:
+            val_type = type(field_value).__name__
+            event_type = type(self).__name__
             raise Exception(
-                f"{type(self).__name__} is not serializable to json."
-                " Please override Event::fields_to_json in the concrete event class in types.py."
+                f"type {val_type} is not serializable to json."
+                f" First make sure that the call sites for {event_type} match the type hints"
+                f" and if they do, you can override Event::fields_to_json in {event_type} in"
+                " types.py to define your own serialization function to any valid json type"
             )
 
     # exactly one time stamp per concrete event
