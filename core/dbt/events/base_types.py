@@ -1,14 +1,19 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from dataclasses import dataclass
 from datetime import datetime
+import json
 import os
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Union
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # These base types define the _required structure_ for the concrete event #
 # types defined in types.py                                               #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+JSONValue = Union[str, int, float, bool, None]
+JSONType = Union[JSONValue, Dict[str, JSONValue], List[JSONValue]]
 
 
 # in preparation for #3977
@@ -75,6 +80,17 @@ class Event(metaclass=ABCMeta):
     @abstractmethod
     def message(self) -> str:
         raise Exception("msg not implemented for Event")
+
+    # Default implementation for turning an event into json.
+    # Should be overridden by concrete event types whose attributes are not serializable to json.
+    def to_json(self) -> str:
+        try:
+            json.dumps(self, sort_keys=True)
+        except TypeError:
+            raise Exception(
+                f"{type(self).__name__} is not serializable to json."
+                " Please override Event::to_json."
+            )
 
     # exactly one time stamp per concrete event
     def get_ts(self) -> datetime:

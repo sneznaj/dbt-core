@@ -8,7 +8,6 @@ import dbt.flags as flags
 from dbt.logger import SECRET_ENV_PREFIX, make_log_dir_if_missing, GLOBAL_LOGGER
 import io
 from io import StringIO, TextIOWrapper
-import json
 import logbook
 import logging
 from logging import Logger
@@ -155,7 +154,7 @@ def create_json_log_line(e: T_Event, msg_fn: Callable[[T_Event], str]) -> str:
     else:
         values['data'] = None
 
-    raw_log_line = json.dumps(values, sort_keys=True)
+    raw_log_line = values.to_json()
     return scrub_secrets(raw_log_line, env_secrets())
 
 
