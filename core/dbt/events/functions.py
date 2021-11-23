@@ -113,11 +113,6 @@ def scrub_secrets(msg: str, secrets: List[str]) -> str:
     return scrubbed
 
 
-# types that represent json serializable values
-JSONValue = Union[str, int, float, bool, None]
-JSONType = Union[JSONValue, Dict[str, JSONValue], List[JSONValue]]
-
-
 # returns a dictionary representation of the event fields. You must specify which of the
 # available messages you would like to use (i.e. - e.message, e.cli_msg(), e.file_msg())
 # used for constructing json formatted events. includes secrets which must be scrubbed at
@@ -125,7 +120,7 @@ JSONType = Union[JSONValue, Dict[str, JSONValue], List[JSONValue]]
 def event_to_serializable_dict(
     e: T_Event, ts_fn: Callable[[datetime], str],
     msg_fn: Callable[[T_Event], str]
-) -> Dict[str, JSONType]:
+) -> Dict[str, Any]:
     data: Optional[dict] = None
     if hasattr(e, '__dataclass_fields__'):
         data = {
