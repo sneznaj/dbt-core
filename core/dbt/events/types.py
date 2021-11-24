@@ -652,6 +652,13 @@ class AddRelation(DebugLevel, Cli, File):
     def message(self) -> str:
         return f"Adding relation: {str(self.relation)}"
 
+    # overriding default json serialization for this event
+    def fields_to_json(self, val: Any) -> Any:
+        if val == self.e:
+            return str(val)
+
+        return val
+
 
 @dataclass
 class DropMissingRelation(DebugLevel, Cli, File):
