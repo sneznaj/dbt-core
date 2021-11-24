@@ -108,6 +108,13 @@ class MainEncounteredError(ErrorLevel, Cli):
     def message(self) -> str:
         return f"Encountered an error:\n{str(self.e)}"
 
+    # overriding default json serialization for this event
+    def fields_to_json(self, val: Any) -> Any:
+        if val == self.e:
+            return str(val)
+
+        return val
+
 
 @dataclass
 class MainStackTrace(DebugLevel, Cli):
