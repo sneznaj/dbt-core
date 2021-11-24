@@ -144,7 +144,8 @@ def scrub_dict_secrets(values: Dict) -> Dict:
 # the usage site.
 def event_to_dict(e: T_Event, msg_fn: Callable[[T_Event], str]) -> dict:
     level = e.level_tag()
-    event_dict =  {
+    event_dict = {
+        'type': 'log_line',
         'log_version': e.log_version,
         'ts': e.get_ts(),
         'pid': e.get_pid(),
@@ -152,7 +153,7 @@ def event_to_dict(e: T_Event, msg_fn: Callable[[T_Event], str]) -> dict:
         'level': level,
         'data': Optional[Dict[str, Any]],
         'event_data_serialized': True,
-        'node_info': None
+        'node_info': e.get_node_info()
     }
 
     return event_dict
