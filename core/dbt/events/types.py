@@ -565,19 +565,12 @@ class SQLQuery(DebugLevel, Cli, File):
 
 @dataclass
 class SQLQueryStatus(DebugLevel, Cli, File):
-    status: Union[AdapterResponse, str]
+    status: str  # could include AdapterResponse if we resolve circular imports
     elapsed: float
     code: str = "E017"
 
     def message(self) -> str:
         return f"SQL status: {self.status} in {self.elapsed} seconds"
-
-    # overriding default json serialization for this event
-    def fields_to_json(self, val: Any) -> Any:
-        if isinstance(val, AdapterResponse):
-            return str(val)  # the AdapterResponse class overrides __str__ so this is a good choice
-
-        return val
 
 
 @dataclass
