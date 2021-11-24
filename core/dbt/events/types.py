@@ -1,13 +1,13 @@
 import argparse
 from dataclasses import dataclass
-from dbt.events.stubs import _CachedRelation, AdapterResponse, BaseRelation, _ReferenceKey
+from dbt.events.stubs import _CachedRelation, BaseRelation, _ReferenceKey
 from dbt import ui
 from dbt.events.base_types import (
     Cli, Event, File, DebugLevel, InfoLevel, WarnLevel, ErrorLevel, ShowException
 )
 from dbt.events.format import format_fancy_output_line, pluralize
 from dbt.node_types import NodeType
-from typing import Any, Callable, cast, Dict, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Set, Tuple, TypeVar
 
 
 # The classes in this file represent the data necessary to describe a
