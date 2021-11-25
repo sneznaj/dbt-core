@@ -11,6 +11,8 @@ from dbt.task.test import TestSelector
 from dbt.node_types import NodeType
 from dbt.exceptions import RuntimeException, InternalException, warn_or_error
 from dbt.logger import log_manager
+import logging
+import dbt.events.functions as event_logger
 
 
 class ListTask(GraphRunnableTask):
@@ -56,6 +58,7 @@ class ListTask(GraphRunnableTask):
     def pre_init_hook(cls, args):
         """A hook called before the task is initialized."""
         log_manager.stderr_console()
+        event_logger.STDOUT_LOG.level = logging.WARN
         super().pre_init_hook(args)
 
     def _iterate_selected_nodes(self):
