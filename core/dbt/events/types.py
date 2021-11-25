@@ -751,6 +751,16 @@ class DumpAfterAddGraph(DebugLevel, Cli, File):
         func_returns = cast(Callable[[], Dict[str, List[str]]], getattr(self, "graph_func"))
         return f"after adding: {func_returns}"
 
+    # TODO should we manually cache the graph here so it doesn't get called for the message
+    # and serialization separately??
+    #
+    # overriding default json serialization for this event
+    def fields_to_json(self, val: Any) -> Any:
+        if val == self.graph_func:  # type: ignore
+            return str(val())
+
+        return val
+
 
 @dataclass
 class DumpBeforeRenameSchema(DebugLevel, Cli, File):
